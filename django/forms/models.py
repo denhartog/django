@@ -417,7 +417,7 @@ class BaseModelForm(BaseForm):
         except ValidationError as e:
             self._update_errors(e)
 
-    def _save_m2m(self):
+    def _save_m2m(self, intermediary=None):
         """
         Save the many-to-many fields and generic relations for this form.
         """
@@ -435,10 +435,12 @@ class BaseModelForm(BaseForm):
                 continue
             if exclude and f.name in exclude:
                 continue
+            if intermediary and f.name in intermediary:
+                continue
             if f.name in cleaned_data:
                 f.save_form_data(self.instance, cleaned_data[f.name])
 
-    def save(self, commit=True):
+    def save(self, commit=True, intermediary=None):
         """
         Save this form's self.instance object if commit=True. Otherwise, add
         a save_m2m() method to the form which can be called after the instance
@@ -454,7 +456,7 @@ class BaseModelForm(BaseForm):
         if commit:
             # If committing, save the instance and the m2m data immediately.
             self.instance.save()
-            self._save_m2m()
+            self._save_m2m(intermediary=intermediary)
         else:
             # If not committing, add a method to the form to allow deferred
             # saving of m2m data.
